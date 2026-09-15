@@ -9,6 +9,10 @@ from parsers.alb_parser import (
 from parsers.cloudtrail_parser import (
     parse_file as parse_cloudtrail_file
 )
+from parsers.nginx_parser import (
+    NGINX_LOG_PATTERN,
+    parse_file as parse_nginx_file
+)
 from parsers.waf_parser import (
     parse_file as parse_waf_file
 )
@@ -33,10 +37,6 @@ class UnsupportedLogFormatError(Exception):
 def read_file_text(
     file_path: str | Path
 ) -> str:
-    """
-    JSON과 텍스트 로그를 구분하기 위해
-    파일 전체를 문자열로 읽습니다.
-    """
     path = Path(file_path)
 
     with path.open(
@@ -47,10 +47,6 @@ def read_file_text(
 
 
 def try_load_json(content: str) -> Any | None:
-    """
-    문자열이 JSON이면 Python 객체로 변환합니다.
-    JSON이 아니면 None을 반환합니다.
-    """
     try:
         return json.loads(content)
 
@@ -111,9 +107,6 @@ def is_waf_log(data: Any) -> bool:
 def get_first_nonempty_line(
     content: str
 ) -> str | None:
-    """
-    빈 줄을 제외하고 첫 번째 로그 줄을 가져옵니다.
-    """
     for line in content.splitlines():
         if line.strip():
             return line.strip()
@@ -122,12 +115,6 @@ def get_first_nonempty_line(
 
 
 def is_alb_log(content: str) -> bool:
-    """
-    텍스트가 ALB 액세스 로그인지 확인합니다.
-
-    ALB 로그는 첫 번째 필드가
-    http, https, h2, grpcs, ws, wss 중 하나입니다.
-    """
     first_line = get_first_nonempty_line(
         content
     )
@@ -157,12 +144,27 @@ def is_alb_log(content: str) -> bool:
     )
 
 
+def is_nginx_log(content: str) -> bool:
+    """
+    첫 번째 로그 줄이 프로젝트의 Nginx 로그 형식과
+    일치하는지 확인합니다.
+    """
+    first_line = get_first_nonempty_line(
+        content
+    )
+
+    if first_line is None:
+        return False
+
+    return (
+        NGINX_LOG_PATTERN.match(first_line)
+        is not None
+    )
+
+
 def detect_log_type(
     file_path: str | Path
 ) -> str:
-    """
-    파일 내용을 확인해 로그 종류를 반환합니다.
-    """
     content = read_file_text(file_path)
     json_data = try_load_json(content)
 
@@ -176,6 +178,9 @@ def detect_log_type(
     if is_alb_log(content):
         return "alb"
 
+    if is_nginx_log(content):
+        return "nginx"
+
     raise UnsupportedLogFormatError(
         f"지원하지 않는 로그 형식입니다: {file_path}"
     )
@@ -184,9 +189,6 @@ def detect_log_type(
 def parse_auto(
     file_path: str | Path
 ) -> list[dict[str, Any]]:
-    """
-    로그 종류를 자동 판별한 뒤 전용 파서를 실행합니다.
-    """
     log_type = detect_log_type(file_path)
 
     if log_type == "cloudtrail":
@@ -197,6 +199,9 @@ def parse_auto(
 
     if log_type == "alb":
         return parse_alb_file(file_path)
+
+    if log_type == "nginx":
+        return parse_nginx_file(file_path)
 
     raise UnsupportedLogFormatError(
         f"파서를 찾을 수 없습니다: {log_type}"

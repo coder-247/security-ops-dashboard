@@ -9,15 +9,10 @@ from parsers.parser_router import (
 
 
 INPUT_FILES = [
-    Path(
-        "samples/cloudtrail_security_group_open.json"
-    ),
-    Path(
-        "samples/waf_sql_injection_block.json"
-    ),
-    Path(
-        "samples/alb_admin_access.log"
-    )
+    Path("samples/cloudtrail_security_group_open.json"),
+    Path("samples/waf_sql_injection_block.json"),
+    Path("samples/alb_admin_access.log"),
+    Path("samples/nginx_admin_access.log"),
 ]
 
 RULES_FILE = Path(

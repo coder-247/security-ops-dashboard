@@ -29,6 +29,12 @@ ALB_FILE = (
     / "alb_admin_access.log"
 )
 
+NGINX_FILE = (
+    PROJECT_ROOT
+    / "samples"
+    / "nginx_admin_access.log"
+)
+
 
 def test_detects_cloudtrail_log():
     log_type = detect_log_type(
@@ -109,3 +115,36 @@ def test_automatically_parses_alb():
     assert event["source"]["ip"] == "203.0.113.50"
     assert event["url"]["path"] == "/admin"
     assert event["http"]["status_code"] == 401
+
+def test_detects_nginx_log():
+    log_type = detect_log_type(
+        NGINX_FILE
+    )
+
+    assert log_type == "nginx"
+
+
+def test_automatically_parses_nginx():
+    events = parse_auto(
+        NGINX_FILE
+    )
+
+    assert len(events) == 1
+
+    event = events[0]
+
+    assert event["log"]["source"] == (
+        "nginx_access"
+    )
+
+    assert event["source"]["ip"] == (
+        "203.0.113.50"
+    )
+
+    assert event["url"]["path"] == "/admin"
+
+    assert event["http"]["status_code"] == 401
+
+    assert event["parser"]["name"] == (
+        "nginx_parser"
+    )
