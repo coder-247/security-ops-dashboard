@@ -20,6 +20,10 @@ from storage.quarantine import (
     save_failure_records
 )
 
+from storage.elasticsearch_storage import (
+    ElasticsearchStorage,
+)
+
 
 INPUT_FILES = [
     Path("samples/cloudtrail_security_group_open.json"),
@@ -212,6 +216,75 @@ def collect_and_parse() -> tuple[
         statistics
     )
 
+def save_to_elasticsearch(
+    events: list[dict],
+    alerts: list[dict],
+    incidents: list[dict],
+    statistics: dict,
+) -> None:
+    """
+    처리 결과를 Elasticsearch에 저장합니다.
+
+    Elasticsearch가 꺼져 있어도 기존 JSONL 저장 결과는
+    유지되고 프로그램 전체가 중단되지 않습니다.
+    """
+    storage = ElasticsearchStorage()
+
+    try:
+        if not storage.is_available():
+            print(
+                "    Elasticsearch 연결 실패: "
+                "JSONL 파일만 저장합니다."
+            )
+            return
+
+        storage.ensure_indices()
+
+        event_count = storage.save_documents(
+            "security-events",
+            events,
+        )
+
+        alert_count = storage.save_documents(
+            "security-alerts",
+            alerts,
+        )
+
+        incident_count = storage.save_documents(
+            "security-incidents",
+            incidents,
+        )
+
+        metric_count = storage.save_documents(
+            "parser-metrics",
+            [statistics],
+        )
+
+        print(
+            f"    이벤트: {event_count}건"
+        )
+        print(
+            f"    경보: {alert_count}건"
+        )
+        print(
+            f"    사건: {incident_count}건"
+        )
+        print(
+            f"    파싱 통계: {metric_count}건"
+        )
+
+    except Exception as error:
+        print(
+            "    Elasticsearch 저장 실패: "
+            f"{error}"
+        )
+        print(
+            "    기존 JSONL 파일은 정상적으로 "
+            "유지됩니다."
+        )
+
+    finally:
+        storage.close()
 
 def main() -> None:
     print("[1] 로그 종류 자동 판별 및 파싱")
@@ -266,9 +339,14 @@ def main() -> None:
     )
 
     save_json(
-    statistics,
-    STATISTICS_OUTPUT_FILE
+        statistics,
+        STATISTICS_OUTPUT_FILE
     )
+
+    save_jsonl(
+        events,
+        EVENT_OUTPUT_FILE,
+)
 
     print("[3] 탐지 규칙 적용")
 
@@ -358,7 +436,14 @@ def main() -> None:
     f"{len(merged_failure_records)}건"
 )
 
+    print("[13] Elasticsearch 저장")
 
+    save_to_elasticsearch(
+        events,
+        alerts,
+        incidents,
+        statistics,
+    )
 
 if __name__ == "__main__":
     main()
