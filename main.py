@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 
+from correlation.correlation_engine import (
+    correlate_events
+)
 from detection.rule_engine import detect_events
 from parsers.parser_router import (
     detect_log_type,
@@ -27,6 +30,10 @@ ALERT_OUTPUT_FILE = Path(
     "outputs/alerts/security_alerts.jsonl"
 )
 
+INCIDENT_OUTPUT_FILE = Path(
+    "outputs/incidents/security_incidents.jsonl"
+)
+
 
 def save_jsonl(
     items: list[dict],
@@ -51,9 +58,6 @@ def save_jsonl(
 
 
 def collect_and_parse() -> list[dict]:
-    """
-    모든 입력 파일의 로그 종류를 자동 판별하고 파싱합니다.
-    """
     all_events = []
 
     for input_file in INPUT_FILES:
@@ -107,14 +111,36 @@ def main() -> None:
         f"{len(alerts)}건"
     )
 
+    print("[5] 연관분석 실행")
+
+    incidents = correlate_events(
+        events,
+        alerts
+    )
+
+    save_jsonl(
+        incidents,
+        INCIDENT_OUTPUT_FILE
+    )
+
     print(
-        f"[5] 이벤트 저장: "
+        f"[6] 생성된 보안 사건: "
+        f"{len(incidents)}건"
+    )
+
+    print(
+        f"[7] 이벤트 저장: "
         f"{EVENT_OUTPUT_FILE}"
     )
 
     print(
-        f"[6] 경보 저장: "
+        f"[8] 경보 저장: "
         f"{ALERT_OUTPUT_FILE}"
+    )
+
+    print(
+        f"[9] 사건 저장: "
+        f"{INCIDENT_OUTPUT_FILE}"
     )
 
 
