@@ -2,23 +2,31 @@ import json
 from pathlib import Path
 
 from detection.rule_engine import detect_events
-from parsers.cloudtrail_parser import parse_file
-
-
-INPUT_FILE = Path(
-    "samples/cloudtrail_security_group_open.json"
+from parsers.parser_router import (
+    detect_log_type,
+    parse_auto
 )
+
+
+INPUT_FILES = [
+    Path(
+        "samples/cloudtrail_security_group_open.json"
+    ),
+    Path(
+        "samples/waf_sql_injection_block.json"
+    )
+]
 
 RULES_FILE = Path(
     "detection/rules.yaml"
 )
 
 EVENT_OUTPUT_FILE = Path(
-    "outputs/normalized/cloudtrail_events.jsonl"
+    "outputs/normalized/security_events.jsonl"
 )
 
 ALERT_OUTPUT_FILE = Path(
-    "outputs/alerts/cloudtrail_alerts.jsonl"
+    "outputs/alerts/security_alerts.jsonl"
 )
 
 
@@ -44,13 +52,39 @@ def save_jsonl(
             file.write(json_line + "\n")
 
 
-def main() -> None:
-    print("[1] CloudTrail 로그 읽기")
+def collect_and_parse() -> list[dict]:
+    """
+    모든 입력 파일의 로그 종류를 자동 판별하고 파싱합니다.
+    """
+    all_events = []
 
-    events = parse_file(INPUT_FILE)
+    for input_file in INPUT_FILES:
+        log_type = detect_log_type(
+            input_file
+        )
+
+        print(
+            f"    {input_file.name} "
+            f"→ {log_type}"
+        )
+
+        events = parse_auto(
+            input_file
+        )
+
+        all_events.extend(events)
+
+    return all_events
+
+
+def main() -> None:
+    print("[1] 로그 종류 자동 판별")
+
+    events = collect_and_parse()
 
     print(
-        f"[2] 정규화 이벤트: {len(events)}건"
+        f"[2] 전체 정규화 이벤트: "
+        f"{len(events)}건"
     )
 
     save_jsonl(
@@ -71,15 +105,18 @@ def main() -> None:
     )
 
     print(
-        f"[4] 생성된 보안 경보: {len(alerts)}건"
+        f"[4] 생성된 보안 경보: "
+        f"{len(alerts)}건"
     )
 
     print(
-        f"[5] 이벤트 저장: {EVENT_OUTPUT_FILE}"
+        f"[5] 이벤트 저장: "
+        f"{EVENT_OUTPUT_FILE}"
     )
 
     print(
-        f"[6] 경보 저장: {ALERT_OUTPUT_FILE}"
+        f"[6] 경보 저장: "
+        f"{ALERT_OUTPUT_FILE}"
     )
 
 

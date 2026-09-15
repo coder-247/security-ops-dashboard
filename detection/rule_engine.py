@@ -75,6 +75,12 @@ def create_alert(
         "severity",
         0
     )
+
+    alert["event"]["severity_label"] = rule.get(
+    "severity_label",
+    "informational"
+    )
+
     alert["event"]["risk_score"] = rule.get(
         "risk_score",
         0

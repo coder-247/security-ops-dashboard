@@ -130,6 +130,7 @@ def parse_record(record: dict[str, Any]) -> dict[str, Any]:
                 else "success"
             ),
             "severity": 0,
+            "severity_label": "informational",
             "risk_score": 0
         },
         "log": {

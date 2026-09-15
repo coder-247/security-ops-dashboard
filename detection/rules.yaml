@@ -9,8 +9,28 @@ rules:
       source.cidr: 0.0.0.0/0
       destination.port: 22
     severity: 90
+    severity_label: critical
     risk_score: 95
     tags:
       - critical
       - ssh_open_to_world
       - security_misconfiguration
+
+  - id: WAF-SQLI-001
+    name: AWS WAF SQL Injection 차단
+    description: AWS WAF가 쿼리 문자열에서 SQL Injection 패턴을 탐지하고 요청을 차단했습니다.
+    recommendation: 공격 IP의 반복 접근 여부와 ALB 및 Nginx 연관 로그를 확인하세요.
+    conditions:
+      log.source: aws_waf
+      event.category: web
+      event.action: block
+      event.outcome: blocked
+      rule.id: SQLi_QUERYARGUMENTS
+    severity: 70
+    severity_label: high
+    risk_score: 85
+    tags:
+      - high
+      - web_attack
+      - sql_injection
+      - blocked

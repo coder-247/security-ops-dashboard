@@ -1,0 +1,75 @@
+{
+  "timestamp": 1789520400000,
+  "formatVersion": 1,
+  "webaclId": "arn:aws:wafv2:ap-northeast-2:123456789012:regional/webacl/security-web-acl/11111111-2222-3333-4444-555555555555",
+  "terminatingRuleId": "AWS-AWSManagedRulesSQLiRuleSet",
+  "terminatingRuleType": "MANAGED_RULE_GROUP",
+  "action": "BLOCK",
+  "terminatingRuleMatchDetails": [
+    {
+      "conditionType": "SQL_INJECTION",
+      "location": "QUERY_STRING",
+      "matchedData": [
+        "OR",
+        "1",
+        "="
+      ]
+    }
+  ],
+  "httpSourceName": "ALB",
+  "httpSourceId": "123456789012-app/security-alb/abcdef1234567890",
+  "ruleGroupList": [
+    {
+      "ruleGroupId": "AWS#AWSManagedRulesSQLiRuleSet",
+      "terminatingRule": {
+        "ruleId": "SQLi_QUERYARGUMENTS",
+        "action": "BLOCK",
+        "overriddenAction": null,
+        "ruleMatchDetails": [
+          {
+            "conditionType": "SQL_INJECTION",
+            "location": "QUERY_STRING",
+            "matchedData": [
+              "OR",
+              "1",
+              "="
+            ]
+          }
+        ]
+      },
+      "nonTerminatingMatchingRules": [],
+      "excludedRules": null
+    }
+  ],
+  "rateBasedRuleList": [],
+  "nonTerminatingMatchingRules": [],
+  "requestHeadersInserted": null,
+  "responseCodeSent": 403,
+  "httpRequest": {
+    "clientIp": "203.0.113.50",
+    "country": "KR",
+    "headers": [
+      {
+        "name": "host",
+        "value": "security.example.com"
+      },
+      {
+        "name": "user-agent",
+        "value": "security-test-client/1.0"
+      }
+    ],
+    "uri": "/search",
+    "args": "q=' OR 1=1--",
+    "httpVersion": "HTTP/1.1",
+    "httpMethod": "GET",
+    "requestId": "1-68c8dd10-111111111111111111111111",
+    "fragment": "",
+    "scheme": "https",
+    "host": "security.example.com"
+  },
+  "labels": [
+    {
+      "name": "awswaf:managed:aws:sql-database:SQLi_QueryArguments"
+    }
+  ]
+}
