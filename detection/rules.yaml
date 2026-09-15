@@ -34,3 +34,23 @@ rules:
       - web_attack
       - sql_injection
       - blocked
+
+  - id: ALB-ADMIN-001
+    name: 관리자 페이지 접근 실패
+    description: 외부 IP가 관리자 페이지에 접근했지만 인증에 실패했습니다.
+    recommendation: 접속 IP의 이전 활동과 WAF 및 웹서버 연관 로그를 확인하세요.
+    conditions:
+      log.source: aws_alb
+      event.category: web
+      event.action: http_request
+      event.outcome: failure
+      url.path: /admin
+      http.status_code: 401
+    severity: 50
+    severity_label: medium
+    risk_score: 60
+    tags:
+      - medium
+      - admin_access
+      - unauthorized
+      - authentication_failure

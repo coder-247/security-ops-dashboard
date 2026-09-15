@@ -1,7 +1,9 @@
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
 
+from detection.rule_engine import detect_events
 from parsers.alb_parser import (
     parse_file,
     parse_line
@@ -14,6 +16,12 @@ SAMPLE_FILE = (
     PROJECT_ROOT
     / "samples"
     / "alb_admin_access.log"
+)
+
+RULES_FILE = (
+    PROJECT_ROOT
+    / "detection"
+    / "rules.yaml"
 )
 
 
@@ -148,3 +156,60 @@ def test_invalid_alb_log_raises_error():
         match="ALB 로그 필드가 부족합니다"
     ):
         parse_line(invalid_log)
+
+def test_admin_401_creates_medium_alert():
+    """
+    /admin의 401 응답이 Medium 경보로
+    변환되는지 확인합니다.
+    """
+    events = parse_file(SAMPLE_FILE)
+
+    alerts = detect_events(
+        events,
+        RULES_FILE
+    )
+
+    assert len(alerts) == 1
+
+    alert = alerts[0]
+
+    assert alert["rule"]["id"] == (
+        "ALB-ADMIN-001"
+    )
+
+    assert alert["event"]["kind"] == "alert"
+    assert alert["event"]["severity"] == 50
+
+    assert alert["event"]["severity_label"] == (
+        "medium"
+    )
+
+    assert alert["event"]["risk_score"] == 60
+
+    assert "admin_access" in alert["tags"]
+
+    assert (
+        "authentication_failure"
+        in alert["tags"]
+    )
+
+
+def test_normal_page_401_does_not_create_admin_alert():
+    """
+    /admin이 아닌 경로의 401 응답에서는
+    관리자 페이지 경보가 발생하지 않는지 확인합니다.
+    """
+    events = parse_file(SAMPLE_FILE)
+
+    normal_page_event = deepcopy(events[0])
+
+    normal_page_event["url"]["path"] = (
+        "/user/profile"
+    )
+
+    alerts = detect_events(
+        [normal_page_event],
+        RULES_FILE
+    )
+
+    assert len(alerts) == 0
