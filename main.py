@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 from correlation.correlation_engine import (
@@ -7,10 +8,13 @@ from correlation.correlation_engine import (
 from detection.rule_engine import detect_events
 from detection.threshold_engine import (
     detect_threshold_events
-)   
+)
 from parsers.parser_router import (
     detect_log_type,
     parse_auto
+)
+from storage.quarantine import (
+    create_failure_record
 )
 
 
@@ -20,7 +24,8 @@ INPUT_FILES = [
     Path("samples/alb_admin_access.log"),
     Path("samples/nginx_admin_access.log"),
     Path("samples/linux_auth_failed.log"),
-    Path("samples/flask_application.jsonl")
+    Path("samples/flask_application.jsonl"),
+    Path("samples/nginx_with_invalid_line.log"),
 ]
 
 RULES_FILE = Path(
@@ -41,6 +46,14 @@ ALERT_OUTPUT_FILE = Path(
 
 INCIDENT_OUTPUT_FILE = Path(
     "outputs/incidents/security_incidents.jsonl"
+)
+
+QUARANTINE_OUTPUT_FILE = Path(
+    "outputs/quarantine/failed_logs.jsonl"
+)
+
+STATISTICS_OUTPUT_FILE = Path(
+    "outputs/metrics/parsing_statistics.json"
 )
 
 
@@ -65,37 +78,165 @@ def save_jsonl(
 
             file.write(json_line + "\n")
 
+def save_json(
+    data: dict,
+    output_file: Path
+) -> None:
+    """
+    통계 데이터를 일반 JSON 파일로 저장합니다.
+    """
+    output_file.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
-def collect_and_parse() -> list[dict]:
+    with output_file.open(
+        "w",
+        encoding="utf-8"
+    ) as file:
+        json.dump(
+            data,
+            file,
+            ensure_ascii=False,
+            indent=2
+        )
+
+def collect_and_parse() -> tuple[
+    list[dict],
+    list[dict],
+    dict
+]:
+    """
+    파일별로 파싱을 시도합니다.
+
+    한 파일이 실패해도 다음 파일을 계속 처리합니다.
+    """
     all_events = []
+    failure_records = []
+
+    statistics = {
+        "total_files": len(INPUT_FILES),
+        "successful_files": 0,
+        "failed_files": 0,
+        "total_events": 0,
+        "parse_success_rate": 0.0
+    }
 
     for input_file in INPUT_FILES:
-        log_type = detect_log_type(
-            input_file
+        detected_log_type = "unknown"
+
+        try:
+            detected_log_type = detect_log_type(
+                input_file
+            )
+
+            print(
+                f"    {input_file.name} "
+                f"→ {detected_log_type}"
+            )
+
+            events = parse_auto(
+                input_file
+            )
+
+            all_events.extend(events)
+
+            statistics[
+                "successful_files"
+            ] += 1
+
+            statistics[
+                "total_events"
+            ] += len(events)
+
+        except Exception as error:
+            statistics[
+                "failed_files"
+            ] += 1
+
+            failure_record = (
+                create_failure_record(
+                    input_file,
+                    error,
+                    detected_log_type
+                )
+            )
+
+            failure_records.append(
+                failure_record
+            )
+
+            print(
+                f"    {input_file.name} "
+                f"→ 파싱 실패·격리"
+            )
+
+            print(
+                f"      원인: {error}"
+            )
+
+    total_files = statistics["total_files"]
+
+    if total_files > 0:
+        statistics["parse_success_rate"] = round(
+            (
+                statistics["successful_files"]
+                / total_files
+            )
+            * 100,
+            2
         )
-
-        print(
-            f"    {input_file.name} "
-            f"→ {log_type}"
+        statistics["parse_failure_rate"] = round(
+        (
+            statistics["failed_files"]
+            / total_files
         )
+        * 100,
+        2
+    )
 
-        events = parse_auto(
-            input_file
-        )
+    else:
+        statistics["parse_failure_rate"] = 0.0
 
-        all_events.extend(events)
-
-    return all_events
+    statistics["generated_at"] = (
+        datetime.now(timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+    return (
+        all_events,
+        failure_records,
+        statistics
+    )
 
 
 def main() -> None:
-    print("[1] 로그 종류 자동 판별")
+    print("[1] 로그 종류 자동 판별 및 파싱")
 
-    events = collect_and_parse()
+    (
+        events,
+        failure_records,
+        statistics
+    ) = collect_and_parse()
 
     print(
         f"[2] 전체 정규화 이벤트: "
         f"{len(events)}건"
+    )
+
+    print(
+        f"    성공 파일: "
+        f"{statistics['successful_files']}개"
+    )
+
+    print(
+        f"    실패 파일: "
+        f"{statistics['failed_files']}개"
+    )
+
+    print(
+        f"    파싱 성공률: "
+        f"{statistics['parse_success_rate']}%"
     )
 
     save_jsonl(
@@ -103,12 +244,22 @@ def main() -> None:
         EVENT_OUTPUT_FILE
     )
 
+    save_jsonl(
+        failure_records,
+        QUARANTINE_OUTPUT_FILE
+    )
+
+    save_json(
+    statistics,
+    STATISTICS_OUTPUT_FILE
+    )
+
     print("[3] 탐지 규칙 적용")
 
     single_event_alerts = detect_events(
-    events,
-    RULES_FILE
-)
+        events,
+        RULES_FILE
+    )
 
     print(
         f"    단일 이벤트 경보: "
@@ -129,6 +280,7 @@ def main() -> None:
         single_event_alerts
         + threshold_alerts
     )
+
     save_jsonl(
         alerts,
         ALERT_OUTPUT_FILE
@@ -157,19 +309,34 @@ def main() -> None:
     )
 
     print(
-        f"[7] 이벤트 저장: "
+        f"[7] 격리된 실패 로그: "
+        f"{len(failure_records)}건"
+    )
+
+    print(
+        f"[8] 이벤트 저장: "
         f"{EVENT_OUTPUT_FILE}"
     )
 
     print(
-        f"[8] 경보 저장: "
+        f"[9] 경보 저장: "
         f"{ALERT_OUTPUT_FILE}"
     )
 
     print(
-        f"[9] 사건 저장: "
+        f"[10] 사건 저장: "
         f"{INCIDENT_OUTPUT_FILE}"
     )
+
+    print(
+        f"[11] 실패 로그 저장: "
+        f"{QUARANTINE_OUTPUT_FILE}"
+    )
+
+    print(
+        f"[12] 파싱 통계 저장: "
+        f"{STATISTICS_OUTPUT_FILE}"
+)
 
 
 if __name__ == "__main__":
