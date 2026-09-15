@@ -14,7 +14,10 @@ from parsers.parser_router import (
     parse_auto
 )
 from storage.quarantine import (
-    create_failure_record
+    create_failure_record,
+    load_failure_records,
+    merge_failure_records,
+    save_failure_records
 )
 
 
@@ -239,13 +242,26 @@ def main() -> None:
         f"{statistics['parse_success_rate']}%"
     )
 
-    save_jsonl(
-        events,
-        EVENT_OUTPUT_FILE
+    existing_failure_records = (
+        load_failure_records(
+            QUARANTINE_OUTPUT_FILE
+        )
+    )
+
+    merged_failure_records = (
+        merge_failure_records(
+            existing_failure_records,
+            failure_records
+        )
+    )
+
+    save_failure_records(
+        merged_failure_records,
+        QUARANTINE_OUTPUT_FILE
     )
 
     save_jsonl(
-        failure_records,
+        merged_failure_records,
         QUARANTINE_OUTPUT_FILE
     )
 
@@ -336,7 +352,12 @@ def main() -> None:
     print(
         f"[12] 파싱 통계 저장: "
         f"{STATISTICS_OUTPUT_FILE}"
+    )
+    print(
+    f"    격리 목록의 고유 실패 로그: "
+    f"{len(merged_failure_records)}건"
 )
+
 
 
 if __name__ == "__main__":
