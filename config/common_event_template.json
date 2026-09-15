@@ -1,0 +1,55 @@
+{
+  "@timestamp": "2026-09-15T09:00:00Z",
+  "schema_version": "1.0.0",
+  "event": {
+    "id": "sample-event-id",
+    "kind": "event",
+    "category": "authentication",
+    "action": "login_attempt",
+    "outcome": "failure",
+    "severity": 50,
+    "risk_score": 50
+  },
+  "log": {
+    "source": "sample",
+    "original": "original log text"
+  },
+  "source": {
+    "ip": null,
+    "port": null
+  },
+  "destination": {
+    "ip": null,
+    "port": null,
+    "service": null
+  },
+  "user": {
+    "name": null
+  },
+  "http": {
+    "method": null,
+    "status_code": null
+  },
+  "url": {
+    "path": null,
+    "query": null
+  },
+  "cloud": {
+    "provider": null,
+    "service": null,
+    "region": null,
+    "resource_id": null
+  },
+  "rule": {
+    "id": null,
+    "name": null
+  },
+  "parser": {
+    "name": "sample_parser",
+    "version": "1.0.0",
+    "status": "success"
+  },
+  "tags": [
+    "sample"
+  ]
+}
