@@ -1,0 +1,45 @@
+{
+  "Records": [
+    {
+      "eventVersion": "1.11",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDATESTUSER123",
+        "arn": "arn:aws:iam::123456789012:user/test-user",
+        "accountId": "123456789012",
+        "userName": "test-user"
+      },
+      "eventTime": "2026-09-15T10:00:00Z",
+      "eventSource": "ec2.amazonaws.com",
+      "eventName": "AuthorizeSecurityGroupIngress",
+      "awsRegion": "ap-northeast-2",
+      "sourceIPAddress": "203.0.113.10",
+      "userAgent": "aws-cli/2.31.0",
+      "requestParameters": {
+        "groupId": "sg-0123456789abcdef0",
+        "ipPermissions": [
+          {
+            "ipProtocol": "tcp",
+            "fromPort": 22,
+            "toPort": 22,
+            "ipRanges": [
+              {
+                "cidrIp": "0.0.0.0/0"
+              }
+            ]
+          }
+        ]
+      },
+      "responseElements": {
+        "requestId": "11111111-2222-3333-4444-555555555555",
+        "_return": true
+      },
+      "requestID": "11111111-2222-3333-4444-555555555555",
+      "eventID": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "readOnly": false,
+      "eventType": "AwsApiCall",
+      "managementEvent": true,
+      "recipientAccountId": "123456789012"
+    }
+  ]
+}

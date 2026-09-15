@@ -1,0 +1,16 @@
+rules:
+  - id: AWS-SG-001
+    name: SSH 포트 전체 인터넷 공개
+    description: 보안그룹의 SSH 22번 포트가 0.0.0.0/0에 공개되었습니다.
+    recommendation: 보안그룹의 SSH 허용 대상을 관리자 IP로 제한하세요.
+    conditions:
+      event.action: AuthorizeSecurityGroupIngress
+      event.outcome: success
+      source.cidr: 0.0.0.0/0
+      destination.port: 22
+    severity: 90
+    risk_score: 95
+    tags:
+      - critical
+      - ssh_open_to_world
+      - security_misconfiguration

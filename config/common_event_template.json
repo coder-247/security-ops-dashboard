@@ -16,12 +16,16 @@
   },
   "source": {
     "ip": null,
-    "port": null
+    "port": null,
+    "cidr": null
   },
   "destination": {
     "ip": null,
     "port": null,
-    "service": null
+    "service": null,
+    "network": {
+        "transport": null
+    }
   },
   "user": {
     "name": null
@@ -42,7 +46,9 @@
   },
   "rule": {
     "id": null,
-    "name": null
+    "name": null,
+    "description": null,
+    "recommendation": null
   },
   "parser": {
     "name": "sample_parser",
