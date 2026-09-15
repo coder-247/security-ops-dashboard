@@ -26,6 +26,13 @@
     "service": null,
     "network": {
         "transport": null
+    },
+    "host": {
+     "name": null
+    },
+    "process": {
+     "name": null,
+     "pid": null
     }
   },
   "user": {
@@ -68,4 +75,5 @@
   "tags": [
     "sample"
   ]
+  
 }

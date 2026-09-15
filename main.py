@@ -5,6 +5,9 @@ from correlation.correlation_engine import (
     correlate_events
 )
 from detection.rule_engine import detect_events
+from detection.threshold_engine import (
+    detect_threshold_events
+)   
 from parsers.parser_router import (
     detect_log_type,
     parse_auto
@@ -16,10 +19,15 @@ INPUT_FILES = [
     Path("samples/waf_sql_injection_block.json"),
     Path("samples/alb_admin_access.log"),
     Path("samples/nginx_admin_access.log"),
+    Path("samples/linux_auth_failed.log")
 ]
 
 RULES_FILE = Path(
     "detection/rules.yaml"
+)
+
+THRESHOLD_RULES_FILE = Path(
+    "detection/threshold_rules.yaml"
 )
 
 EVENT_OUTPUT_FILE = Path(
@@ -96,11 +104,30 @@ def main() -> None:
 
     print("[3] 탐지 규칙 적용")
 
-    alerts = detect_events(
-        events,
-        RULES_FILE
+    single_event_alerts = detect_events(
+    events,
+    RULES_FILE
+)
+
+    print(
+        f"    단일 이벤트 경보: "
+        f"{len(single_event_alerts)}건"
     )
 
+    threshold_alerts = detect_threshold_events(
+        events,
+        THRESHOLD_RULES_FILE
+    )
+
+    print(
+        f"    임계치 경보: "
+        f"{len(threshold_alerts)}건"
+    )
+
+    alerts = (
+        single_event_alerts
+        + threshold_alerts
+    )
     save_jsonl(
         alerts,
         ALERT_OUTPUT_FILE

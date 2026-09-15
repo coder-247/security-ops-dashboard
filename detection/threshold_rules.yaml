@@ -1,0 +1,21 @@
+threshold_rules:
+  - id: LINUX-SSH-001
+    name: SSH 로그인 반복 실패
+    description: 같은 IP에서 5분 안에 SSH 로그인이 5회 이상 실패했습니다.
+    recommendation: 출발지 IP의 접근 이력을 확인하고 필요하면 보안그룹 또는 방화벽에서 차단하세요.
+    conditions:
+      log.source: linux_auth
+      event.action: ssh_login
+      event.outcome: failure
+    group_by: source.ip
+    threshold: 5
+    time_window_seconds: 300
+    alert_action: ssh_brute_force
+    severity: 70
+    severity_label: high
+    risk_score: 80
+    tags:
+      - high
+      - ssh
+      - brute_force
+      - authentication_attack

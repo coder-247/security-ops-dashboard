@@ -13,6 +13,10 @@ from parsers.nginx_parser import (
     NGINX_LOG_PATTERN,
     parse_file as parse_nginx_file
 )
+from parsers.linux_auth_parser import (
+    AUTH_LOG_PATTERN,
+    parse_file as parse_linux_auth_file
+)
 from parsers.waf_parser import (
     parse_file as parse_waf_file
 )
@@ -161,6 +165,22 @@ def is_nginx_log(content: str) -> bool:
         is not None
     )
 
+def is_linux_auth_log(content: str) -> bool:
+    """
+    첫 번째 로그 줄이 Linux SSH 인증 로그인지
+    확인합니다.
+    """
+    first_line = get_first_nonempty_line(
+        content
+    )
+
+    if first_line is None:
+        return False
+
+    return (
+        AUTH_LOG_PATTERN.match(first_line)
+        is not None
+    )
 
 def detect_log_type(
     file_path: str | Path
@@ -180,6 +200,9 @@ def detect_log_type(
 
     if is_nginx_log(content):
         return "nginx"
+
+    if is_linux_auth_log(content):
+        return "linux_auth"
 
     raise UnsupportedLogFormatError(
         f"지원하지 않는 로그 형식입니다: {file_path}"
@@ -203,6 +226,9 @@ def parse_auto(
     if log_type == "nginx":
         return parse_nginx_file(file_path)
 
+    if log_type == "linux_auth":
+        return parse_linux_auth_file(file_path)
+    
     raise UnsupportedLogFormatError(
         f"파서를 찾을 수 없습니다: {log_type}"
     )

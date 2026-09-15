@@ -35,6 +35,12 @@ NGINX_FILE = (
     / "nginx_admin_access.log"
 )
 
+LINUX_AUTH_FILE = (
+    PROJECT_ROOT
+    / "samples"
+    / "linux_auth_failed.log"
+)
+
 
 def test_detects_cloudtrail_log():
     log_type = detect_log_type(
@@ -147,4 +153,41 @@ def test_automatically_parses_nginx():
 
     assert event["parser"]["name"] == (
         "nginx_parser"
+    )
+
+def test_detects_linux_auth_log():
+    log_type = detect_log_type(
+        LINUX_AUTH_FILE
+    )
+
+    assert log_type == "linux_auth"
+
+
+def test_automatically_parses_linux_auth():
+    events = parse_auto(
+        LINUX_AUTH_FILE
+    )
+
+    assert len(events) == 5
+
+    first_event = events[0]
+
+    assert first_event["log"]["source"] == (
+        "linux_auth"
+    )
+
+    assert first_event["source"]["ip"] == (
+        "198.51.100.25"
+    )
+
+    assert first_event["event"]["action"] == (
+        "ssh_login"
+    )
+
+    assert first_event["event"]["outcome"] == (
+        "failure"
+    )
+
+    assert first_event["parser"]["name"] == (
+        "linux_auth_parser"
     )
