@@ -23,6 +23,12 @@ WAF_FILE = (
     / "waf_sql_injection_block.json"
 )
 
+ALB_FILE = (
+    PROJECT_ROOT
+    / "samples"
+    / "alb_admin_access.log"
+)
+
 
 def test_detects_cloudtrail_log():
     log_type = detect_log_type(
@@ -81,3 +87,25 @@ def test_unknown_log_raises_error(
         UnsupportedLogFormatError
     ):
         detect_log_type(unknown_file)
+
+def test_detects_alb_log():
+    log_type = detect_log_type(
+        ALB_FILE
+    )
+
+    assert log_type == "alb"
+
+
+def test_automatically_parses_alb():
+    events = parse_auto(
+        ALB_FILE
+    )
+
+    assert len(events) == 1
+
+    event = events[0]
+
+    assert event["log"]["source"] == "aws_alb"
+    assert event["source"]["ip"] == "203.0.113.50"
+    assert event["url"]["path"] == "/admin"
+    assert event["http"]["status_code"] == 401

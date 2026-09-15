@@ -14,6 +14,9 @@ INPUT_FILES = [
     ),
     Path(
         "samples/waf_sql_injection_block.json"
+    ),
+    Path(
+        "samples/alb_admin_access.log"
     )
 ]
 

@@ -34,9 +34,14 @@
   "http": {
     "method": null,
     "status_code": null,
-    "user_agent": null
+    "user_agent": null,
+     "version": null,
+    "request_bytes": null,
+    "response_bytes": null,
+    "response_time_ms": null
   },
   "url": {
+    "full": null,
     "path": null,
     "query": null
   },
@@ -46,6 +51,9 @@
     "region": null,
     "resource_id": null
   },
+  "trace": {
+  "id": null
+},
   "rule": {
     "id": null,
     "name": null,
