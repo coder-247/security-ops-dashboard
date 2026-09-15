@@ -19,7 +19,8 @@ INPUT_FILES = [
     Path("samples/waf_sql_injection_block.json"),
     Path("samples/alb_admin_access.log"),
     Path("samples/nginx_admin_access.log"),
-    Path("samples/linux_auth_failed.log")
+    Path("samples/linux_auth_failed.log"),
+    Path("samples/flask_application.jsonl")
 ]
 
 RULES_FILE = Path(

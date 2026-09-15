@@ -3,6 +3,9 @@ import shlex
 from pathlib import Path
 from typing import Any
 
+from parsers.flask_parser import (
+    parse_file as parse_flask_file
+)
 from parsers.alb_parser import (
     parse_file as parse_alb_file
 )
@@ -107,6 +110,60 @@ def is_waf_log(data: Any) -> bool:
 
     return False
 
+def is_flask_record(record: Any) -> bool:
+    """
+    JSON 객체 한 건이 프로젝트의 Flask 로그인지
+    확인합니다.
+    """
+    if not isinstance(record, dict):
+        return False
+
+    required_fields = {
+        "timestamp",
+        "event_type",
+        "action",
+        "outcome"
+    }
+
+    return required_fields.issubset(
+        record.keys()
+    )
+
+
+def is_flask_log(
+    content: str,
+    json_data: Any
+) -> bool:
+    """
+    단일 JSON 객체와 여러 줄 JSONL을 확인합니다.
+    """
+    if is_flask_record(json_data):
+        return True
+
+    if isinstance(json_data, list) and json_data:
+        return is_flask_record(
+            json_data[0]
+        )
+
+    first_line = get_first_nonempty_line(
+        content
+    )
+
+    if first_line is None:
+        return False
+
+    try:
+        first_record = json.loads(
+            first_line
+        )
+
+    except json.JSONDecodeError:
+        return False
+
+    return is_flask_record(
+        first_record
+    )
+
 
 def get_first_nonempty_line(
     content: str
@@ -195,6 +252,9 @@ def detect_log_type(
         if is_waf_log(json_data):
             return "waf"
 
+    if is_flask_log(content, json_data):
+        return "flask"
+    
     if is_alb_log(content):
         return "alb"
 
@@ -220,6 +280,9 @@ def parse_auto(
     if log_type == "waf":
         return parse_waf_file(file_path)
 
+    if log_type == "flask":
+        return parse_flask_file(file_path)
+    
     if log_type == "alb":
         return parse_alb_file(file_path)
 

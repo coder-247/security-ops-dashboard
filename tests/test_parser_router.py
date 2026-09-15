@@ -23,6 +23,12 @@ WAF_FILE = (
     / "waf_sql_injection_block.json"
 )
 
+FLASK_FILE = (
+    PROJECT_ROOT
+    / "samples"
+    / "flask_application.jsonl"
+)
+
 ALB_FILE = (
     PROJECT_ROOT
     / "samples"
@@ -190,4 +196,45 @@ def test_automatically_parses_linux_auth():
 
     assert first_event["parser"]["name"] == (
         "linux_auth_parser"
+    )
+
+def test_detects_flask_log():
+    log_type = detect_log_type(
+        FLASK_FILE
+    )
+
+    assert log_type == "flask"
+
+
+def test_automatically_parses_flask():
+    events = parse_auto(
+        FLASK_FILE
+    )
+
+    assert len(events) == 1
+
+    event = events[0]
+
+    assert event["log"]["source"] == (
+        "flask_application"
+    )
+
+    assert event["event"]["category"] == (
+        "authorization"
+    )
+
+    assert event["event"]["action"] == (
+        "admin_access"
+    )
+
+    assert event["event"]["outcome"] == (
+        "failure"
+    )
+
+    assert event["user"]["name"] == (
+        "test-user"
+    )
+
+    assert event["parser"]["name"] == (
+        "flask_parser"
     )

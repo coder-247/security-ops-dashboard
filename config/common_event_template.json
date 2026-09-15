@@ -33,6 +33,13 @@
     "process": {
      "name": null,
      "pid": null
+    },
+    "application": {
+     "service": null,
+     "environment": null,
+     "level": null,
+     "message": null,
+     "original_outcome": null
     }
   },
   "user": {
