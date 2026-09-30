@@ -1,0 +1,27 @@
+{
+  "@timestamp": "2026-09-29T10:30:00.000Z",
+  "winlog": {
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "event_id": 1,
+    "record_id": 10001,
+    "computer_name": "WIN-ENDPOINT-01",
+    "event_data": {
+      "UtcTime": "2026-09-29 10:30:00.000",
+      "ProcessGuid": "{11111111-2222-3333-4444-555555555555}",
+      "ProcessId": "4321",
+      "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "CommandLine": "powershell.exe -NoProfile -EncodedCommand VwByAGkAdABlAC0ASABvAHMAdAAgACIAcwBlAGMAdQByAGkAdAB5AC0AdABlAHMAdAAiAA==",
+      "CurrentDirectory": "C:\\Users\\student\\Downloads\\",
+      "User": "LAB\\student",
+      "LogonGuid": "{AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}",
+      "LogonId": "0x12345",
+      "TerminalSessionId": "1",
+      "IntegrityLevel": "Medium",
+      "Hashes": "SHA256=0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+      "ParentProcessGuid": "{99999999-8888-7777-6666-555555555555}",
+      "ParentProcessId": "1234",
+      "ParentImage": "C:\\Windows\\System32\\cmd.exe",
+      "ParentCommandLine": "cmd.exe /c powershell.exe"
+    }
+  }
+}

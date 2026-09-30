@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import statistics
 
 from main import (
     collect_and_parse,
@@ -92,10 +93,11 @@ def test_pipeline_continues_after_failure():
         collect_and_parse()
     )
 
-    assert len(events) == 10
+    assert len(events) == 11
     assert len(failures) == 1
 
-    assert statistics["successful_files"] == 6
+    assert statistics["successful_files"] == 7
+    assert statistics["total_events"] == 11
     assert statistics["failed_files"] == 1
 
 
@@ -107,16 +109,18 @@ def test_parsing_statistics_are_correct():
         collect_and_parse()
     )
 
-    assert statistics["total_files"] == 7
-    assert statistics["total_events"] == 10
+    assert statistics["total_files"] == 8
+    assert statistics["successful_files"] == 7
+    assert statistics["failed_files"] == 1
+    assert statistics["total_events"] == 11
 
     assert statistics[
-        "parse_success_rate"
-    ] == 85.71
+         "parse_success_rate"
+    ] == 87.5
 
     assert statistics[
         "parse_failure_rate"
-    ] == 14.29
+    ] == 12.5
 
     assert statistics["generated_at"].endswith(
         "Z"
@@ -131,12 +135,12 @@ def test_statistics_are_saved_as_json(
     저장되는지 확인합니다.
     """
     statistics = {
-        "total_files": 7,
-        "successful_files": 6,
+        "total_files": 8,
+        "successful_files": 7,
         "failed_files": 1,
-        "total_events": 10,
-        "parse_success_rate": 85.71,
-        "parse_failure_rate": 14.29
+        "total_events": 11,
+        "parse_success_rate": 87.5,
+        "parse_failure_rate": 12.5
     }
 
     output_file = (
@@ -157,8 +161,12 @@ def test_statistics_are_saved_as_json(
         )
     )
 
-    assert saved_data["total_files"] == 7
+    assert saved_data["total_files"] == 8
 
     assert saved_data[
         "parse_success_rate"
-    ] == 85.71
+    ] == 87.5
+
+    assert saved_data[
+        "parse_failure_rate"
+    ] == 12.5

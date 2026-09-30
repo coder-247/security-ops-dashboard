@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from storage.elasticsearch_storage import ElasticsearchStorage
 
 from correlation.correlation_engine import (
     correlate_events
@@ -20,9 +21,6 @@ from storage.quarantine import (
     save_failure_records
 )
 
-from storage.elasticsearch_storage import (
-    ElasticsearchStorage,
-)
 
 
 INPUT_FILES = [
@@ -33,6 +31,7 @@ INPUT_FILES = [
     Path("samples/linux_auth_failed.log"),
     Path("samples/flask_application.jsonl"),
     Path("samples/nginx_with_invalid_line.log"),
+    Path("samples/sysmon_suspicious_powershell.json"),
 ]
 
 RULES_FILE = Path(

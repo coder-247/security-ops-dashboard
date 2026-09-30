@@ -46,16 +46,55 @@ def matches_rule(
 ) -> bool:
     """
     이벤트가 규칙의 모든 조건과 일치하는지 확인합니다.
-    """
-    conditions = rule.get("conditions", {})
 
-    for field_path, expected_value in conditions.items():
+    conditions:
+        필드값이 정확하게 같은지 비교합니다.
+
+    contains:
+        문자열 필드에 특정 문자열이 포함되는지
+        대소문자를 구분하지 않고 확인합니다.
+    """
+    conditions = rule.get(
+        "conditions",
+        {}
+    )
+
+    for (
+        field_path,
+        expected_value
+    ) in conditions.items():
         actual_value = get_nested_value(
             event,
             field_path
         )
 
         if actual_value != expected_value:
+            return False
+
+    contains_conditions = rule.get(
+        "contains",
+        {}
+    )
+
+    for (
+        field_path,
+        expected_text
+    ) in contains_conditions.items():
+        actual_value = get_nested_value(
+            event,
+            field_path
+        )
+
+        if not isinstance(
+            actual_value,
+            str
+        ):
+            return False
+
+        if (
+            str(expected_text).lower()
+            not in actual_value.lower()
+        ):
             return False
 
     return True

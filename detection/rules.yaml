@@ -54,3 +54,25 @@ rules:
       - admin_access
       - unauthorized
       - authentication_failure
+  - id: WIN-SYSMON-001
+    name: 인코딩된 PowerShell 명령 실행
+    description: Windows 엔드포인트에서 인코딩된 PowerShell 명령이 실행되었습니다.
+    recommendation: 해당 프로세스를 격리하고 사용자, 부모 프로세스, 명령줄 및 실행 파일 해시를 조사하세요.
+    conditions:
+      log.source: windows_sysmon
+      event.code: "1"
+      event.category: process
+      event.action: process_start
+      process.name: powershell.exe
+    contains:
+      process.command_line: "-EncodedCommand"
+    severity: 70
+    severity_label: high
+    risk_score: 90
+    tags:
+      - high
+      - windows
+      - endpoint
+      - edr
+      - suspicious_powershell
+      - encoded_command

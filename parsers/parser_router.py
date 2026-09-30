@@ -24,6 +24,9 @@ from parsers.waf_parser import (
     parse_file as parse_waf_file
 )
 
+from parsers.sysmon_parser import (
+    parse_file as parse_sysmon_file
+)
 
 ALB_CONNECTION_TYPES = {
     "http",
@@ -239,6 +242,37 @@ def is_linux_auth_log(content: str) -> bool:
         is not None
     )
 
+def is_sysmon_log(
+    data: object
+) -> bool:
+    """
+    JSON 데이터가 Windows Sysmon 로그인지 확인합니다.
+    """
+    candidate = data
+
+    if isinstance(candidate, list):
+        if not candidate:
+            return False
+
+        candidate = candidate[0]
+
+    if not isinstance(candidate, dict):
+        return False
+
+    winlog = candidate.get("winlog")
+
+    if not isinstance(winlog, dict):
+        return False
+
+    channel = str(
+        winlog.get("channel", "")
+    ).lower()
+
+    return (
+        "sysmon/operational" in channel
+        and winlog.get("event_id") is not None
+    )
+
 def detect_log_type(
     file_path: str | Path
 ) -> str:
@@ -246,6 +280,9 @@ def detect_log_type(
     json_data = try_load_json(content)
 
     if json_data is not None:
+        if is_sysmon_log(json_data):
+            return "sysmon"
+
         if is_cloudtrail_log(json_data):
             return "cloudtrail"
 
@@ -254,7 +291,7 @@ def detect_log_type(
 
     if is_flask_log(content, json_data):
         return "flask"
-    
+
     if is_alb_log(content):
         return "alb"
 
@@ -274,6 +311,9 @@ def parse_auto(
 ) -> list[dict[str, Any]]:
     log_type = detect_log_type(file_path)
 
+    if log_type == "sysmon":
+        return parse_sysmon_file(file_path)
+
     if log_type == "cloudtrail":
         return parse_cloudtrail_file(file_path)
 
@@ -282,7 +322,7 @@ def parse_auto(
 
     if log_type == "flask":
         return parse_flask_file(file_path)
-    
+
     if log_type == "alb":
         return parse_alb_file(file_path)
 
@@ -291,7 +331,7 @@ def parse_auto(
 
     if log_type == "linux_auth":
         return parse_linux_auth_file(file_path)
-    
+
     raise UnsupportedLogFormatError(
         f"파서를 찾을 수 없습니다: {log_type}"
     )

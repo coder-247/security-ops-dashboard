@@ -28,5 +28,24 @@ services:
 
     restart: unless-stopped
 
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.5.4
+    container_name: security-ops-kibana
+
+    environment:
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+      XPACK_SECURITY_ENABLED: "false"
+      SERVER_NAME: "security-ops-kibana"
+      SERVER_HOST: "0.0.0.0"
+
+    ports:
+      - "5601:5601"
+
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+    restart: unless-stopped
+
 volumes:
   elasticsearch-data:
