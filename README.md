@@ -1,5 +1,7 @@
 # 이기종 보안 로그 통합 분석 및 보안관제 업무지원 대시보드
 
+[![Python tests](https://github.com/coder-247/security-ops-dashboard/actions/workflows/pytest.yml/badge.svg)](https://github.com/coder-247/security-ops-dashboard/actions/workflows/pytest.yml)
+
 AWS·Linux·웹·Windows 엔드포인트에서 발생하는 서로 다른 형식의 로그를 Python 파서로 정규화하고, 탐지·연관분석·격리·재처리한 뒤 Elasticsearch와 Kibana에서 통합 분석하는 보안관제 프로젝트입니다.
 
 ## 1. 프로젝트 개요
