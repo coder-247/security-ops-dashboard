@@ -24,6 +24,9 @@ htmlcov/
 logs/
 *.log
 
+# 테스트용 로그 샘플은 Git에 포함
+!samples/*.log
+
 # 임시 출력 파일
 outputs/
 tmp/

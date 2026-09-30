@@ -1,0 +1,2 @@
+203.0.113.77 - - [16/Sep/2026:11:20:00 +0900] "GET /login HTTP/1.1" 200 256 "-" "test-client/1.0" request_time=0.020 request_id=test-invalid-file
+this is an invalid nginx log
